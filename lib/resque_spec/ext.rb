@@ -1,4 +1,5 @@
 require 'resque'
+require 'resque_scheduler'
 
 module Resque
   class Job
@@ -56,6 +57,7 @@ module Resque
     end
   end
 
+
   def peek(queue, start = 0, count = 1)
     return peek_without_resque_spec(queue, start, count) if ResqueSpec.disable_ext
     ResqueSpec.peek(queue, start, count).map do |job|
@@ -89,4 +91,18 @@ module Resque
     end
     before_hooks.any? { |result| result == false }
   end
+
+end
+
+module ResqueScheduler
+  def enqueue_in(number_of_seconds_from_now, klass, *args)
+    Resque.enqueue_to(queue_from_class(klass), *args)
+  end
+
+  def enqueue_at(timestamp, klass, *args)
+    Resque.enqueue_to(queue_from_class(klass), *args)
+  end
+
+  alias :enqueue_at_without_resque_spec :enqueue_at
+  alias :enqueue_in_without_resque_spec :enqueue_in
 end
